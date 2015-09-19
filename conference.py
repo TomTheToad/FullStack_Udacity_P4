@@ -965,7 +965,7 @@ class ConferenceApi(remote.Service):
         conf.put()
         return BooleanMessage(data=retval)
 
-    # todo: This supplied method is working yet giving an error
+    # todo: This supplied method is not working properly
     # error only when deployed to app spot, not local
     # appears to be an api change?
     # id_token verification failed
@@ -976,13 +976,13 @@ class ConferenceApi(remote.Service):
     def getConferencesToAttend(self, request):
         """Get list of conferences that user has registered for."""
         prof = self._getProfileFromUser()  # get user Profile
-        conf_keys = [ndb.Key(urlsafe=wsck)
-                     for wsck in prof.conferenceKeysToAttend]
+        conf_keys = [ndb.Key(urlsafe=wsck) for wsck in
+                     prof.conferenceKeysToAttend]
         conferences = ndb.get_multi(conf_keys)
 
         # get organizers
-        organisers = [ndb.Key(Profile, conf.organizerUserId)
-                      for conf in conferences]
+        organisers = [ndb.Key(Profile, conf.organizerUserId) for conf in
+                      conferences]
         profiles = ndb.get_multi(organisers)
 
         # put display names in a dict for easier fetching
@@ -991,8 +991,9 @@ class ConferenceApi(remote.Service):
             names[profile.key.id()] = profile.displayName
 
         # return set of ConferenceForm objects per Conference
-        return ConferenceForms(items=[self._copyConferenceToForm(
-            conf, names[conf.organizerUserId]) for conf in conferences])
+        return ConferenceForms(
+            items=[self._copyConferenceToForm(
+                conf, names[conf.organizerUserId]) for conf in conferences])
 
     @endpoints.method(CONF_GET_REQUEST, BooleanMessage,
                       path='conference/register/{websafeConferenceKey}',
