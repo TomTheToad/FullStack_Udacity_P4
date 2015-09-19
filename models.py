@@ -14,7 +14,6 @@ __author__ = 'wesc+api@google.com (Wesley Chun)'
 
 import httplib
 import endpoints
-import datetime
 from protorpc import messages
 from google.appengine.ext import ndb
 
@@ -55,12 +54,13 @@ class Wishlist(ndb.Model):
 class WishlistForm(messages.Message):
     # userId = messages.StringField(1)
     sessionKey = messages.StringField(2)
-    websafeKey = messages.StringField(3)
+    # websafeKey = messages.StringField(3)
 
 
 class WishlistFormName(messages.Message):
     sessionName = messages.StringField(1)
-    websafeKey = messages.StringField(2)
+    # websafeKey = messages.StringField(2)
+
 
 class BooleanMessage(messages.Message):
     """BooleanMessage-- outbound Boolean value message"""
@@ -214,4 +214,13 @@ class StringMessage(messages.Message):
 
 class SessionQueryForm(messages.Message):
     query = messages.StringField(1)
-    websafeKey = messages.StringField(2)
+    # websafeKey = messages.StringField(2)
+
+class SessionQueryKeyForm(messages.Message):
+    websafeKey = messages.StringField(1)
+
+class SessionsQueryTypeAndTime(messages.Message):
+    # conferenceName = messages.StringField(1)
+    sessionType = messages.StringField(2)
+    sessionBeforeTime = messages.StringField(3)
+    sessionAfterTime = messages.StringField(4)
