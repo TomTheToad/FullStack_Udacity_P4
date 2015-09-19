@@ -427,7 +427,7 @@ class ConferenceApi(remote.Service):
                       http_method='Post',
                       name='addSessionToWishlist')
     def addSessionToWishlist(self, request):
-        '''Add a Session to wishlist by session key'''
+        """Add a Session to wishlist by session key"""
         # Convert websafeConferenceKey to model key
         session_key = self._convertSessionWebsafeConferenceKey(
             request.sessionKey)
@@ -441,7 +441,7 @@ class ConferenceApi(remote.Service):
                       http_method='Post',
                       name='addSessionToWishlistByName')
     def addSessionToWishlistByName(self, request):
-        '''Add session to wish list by session name'''
+        """Add session to wish list by session name"""
         self._addSessionToWishListByName(session_name=request.sessionName)
         msg = "Session added to your wish list."
         return StringMessage(data=msg)
@@ -451,7 +451,7 @@ class ConferenceApi(remote.Service):
                       http_method='GET',
                       name='getSessionsInWishlist')
     def getSessionsInWishlist(self, request):
-        '''Get Session from current user wishlist'''
+        """Get Session from current user wishlist"""
         return self._getSessionsInWishlist()
 
 ###########################
@@ -1104,7 +1104,7 @@ class ConferenceApi(remote.Service):
                       http_method='POST',
                       name='postReview')
     def postReview(self, request):
-        '''Post a review for a session'''
+        """Post a review for a session"""
         self._checkLoggedIn()
 
         if not request.conference_name:
