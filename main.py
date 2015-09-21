@@ -16,8 +16,10 @@ class SetFeaturedSpeakerHandler(webapp2.RequestHandler):
 
         # ConferenceApi._setFeaturedSpeaker()
 
-        ConferenceApi._setFeaturedSpeaker(
-            self.request.get('speakerDisplayName'))
+        C_API = ConferenceApi()
+        featured_speaker = self.request.get('speaker')
+
+        C_API._setFeaturedSpeaker(featured_speaker)
 
 class SendConfirmationEmailHandler(webapp2.RequestHandler):
     def post(self):

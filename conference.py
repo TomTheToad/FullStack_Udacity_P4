@@ -736,13 +736,15 @@ class ConferenceApi(remote.Service):
 
         # Update featured speaker key in memcache
 
+        # Get the current speaker
         speaker = session.speakerDisplayName
 
-        # todo: test taskque
+        # Get the number of session hosted by current speaker
         number_sessions = self._getNumberOfSessionBySpeaker(speaker)
 
+        # If number of sessions greater than one set featured speaker
         if number_sessions > 1:
-            taskqueue.add(params={speaker: data['speakerDisplayName']},
+            taskqueue.add(params={'speaker': speaker},
                           url='/tasks/set_featured_speaker')
 
         return self._copySessionToForm(session=session)
@@ -1167,7 +1169,7 @@ class ConferenceApi(remote.Service):
 ##############################################################################
 
     # Sets a memcache key to speaker
-    def _setFeaturedSpeaker(featured_speaker):
+    def _setFeaturedSpeaker(self, featured_speaker):
 
         # Set MEMCACHE key to FEATURED SPEAKER
         memcache_speaker_key = 'FEATURED SPEAKER'
