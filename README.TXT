@@ -2,6 +2,40 @@ Author: Victor Asselta
 Project: Google App Engine P4
 Course: Full Stack Nanodegree
 
+App Engine application for the Udacity training course.
+
+## Products
+- [App Engine][1]
+
+## Language
+- [Python][2]
+
+## APIs
+- [Google Cloud Endpoints][3]
+
+## Setup Instructions
+1. Update the value of `application` in `app.yaml` to the app ID you
+   have registered in the App Engine admin console and would like to use to host
+   your instance of this sample.
+1. Update the values at the top of `settings.py` to
+   reflect the respective client IDs you have registered in the
+   [Developer Console][4].
+1. Update the value of CLIENT_ID in `static/js/app.js` to the Web client ID
+1. (Optional) Mark the configuration files as unchanged as follows:
+   `$ git update-index --assume-unchanged app.yaml settings.py static/js/app.js`
+1. Run the app with the devserver using `dev_appserver.py DIR`, and ensure it's running by visiting your local server's address (by default [localhost:8080][5].)
+1. (Optional) Generate your client library(ies) with [the endpoints tool][6].
+1. Deploy your application.
+
+
+[1]: https://developers.google.com/appengine
+[2]: http://python.org
+[3]: https://developers.google.com/appengine/docs/python/endpoints/
+[4]: https://console.developers.google.com/
+[5]: https://localhost:8080/
+[6]: https://developers.google.com/appengine/docs/python/endpoints/endpoints_tool
+
+
 The following files have been added to, adapted, and wholly changed in order to satisfy the course requirements.
 
 The included files are designed to run with Google's app engine and will not work properly on their own.
@@ -91,8 +125,60 @@ postReview and getReview
 
 TASK 3 Query related problem:
 
-    I'll admit to being a little confused by this. I did not see this as a problem, other than datetime conversion for the sake of comparison. That's a bit interesting/ problematic
-    I chose to filter a session query in segments, as opposed to using AND/ OR, each layer would be easier to troubleshoot. This seemed proper albeit verbose.
+    update: After reviewing the problem and some helpful hints from my reviewer:
+
+    The following query would necessitate the use of inequality filters. That is any of the following filters:
+
+    not equal: !=
+    less than: <
+    greater than: >
+    less than or equal to: <=
+    greater than or equal to: >=
+
+    Inequality because they represent alternate cases to being equal to as in the equality filter ' = '
+
+    In this case, I'm guessing here, one 'problem' would be the need for composite indexes. Due to the nature of datastore, queries need an index to work properly.
+    Fortunately when you run a query on your local dev server, these indexes are created for you.
+    If you were to not run these queries locally then they WILL NOT WORK on app spot.
+
+    Another perceived problem might be a particular nature of datastore queries involving inequality filters.
+
+    I'm guessing that this is the real problem we're talking about here.
+
+    An inequality filter can only be applied to a single property.
+    This creates a problem with composite indexes. So in this case you must construct a query which utilizes more than a single composite index or, stated differently, more than a single query.
+
+    I, being me and slightly confused, did not see this as a 'problem' but as just another step to building the application. A design necessity as it is.
+
+    This query, which necessitates at least two inequality filters and an equality filter, dictates the need for multiple queries to apply the inequality filters. No > && < allowed here.
+
+    In this case, as an applied solution, I decided to simply apply each filter one by one.
+
+    SO I figured the following would be the simplest solution:
+
+        1) Query all available sessions:
+            sessions = Session.query()
+
+        2) Filter by the specific conference by name with an equality filter:
+            filter1 = sessions.filter(Session.conferenceName == conference.name)
+
+        3) Filter by session type (workshop, lecture, etc. ) with another equality filter.
+            filter2 = filter1.filter(Session.sessionType == session_type)
+
+        4) Filter the query down to the sessions before a specific time with an inequality filter ( less than )
+            filter3 = filter2.filter(Session.startTime < before_time)
+
+        5) And finally filter the query down to the sessions that are scheduled after a specific time using the another inequality filter ( greater than )
+            filter4 = filter3.filter(Session.startTime > after_time)
+
+        We could combine some these filters and have much less code but, the steps appear clearer this way. At least I think so.
+        As stated above though, you can not combine inequality filters. All though these results are not sorted, it is worth mentioning, that any sorting need be applied prior to other filters.
+        More specifically prior to the inequality filters. I'm guessing again that the query data is altered by applying filters and these alterations would interfere with ordering each record.
+
+
+    old answer:
+        I'll admit to being a little confused by this. I did not see this as a problem, other than datetime conversion for the sake of comparison. That's a bit interesting/ problematic
+        I chose to filter a session query in segments, as opposed to using AND/ OR, each layer would be easier to troubleshoot. This seemed proper albeit verbose.
 
 
 SOME NOTES ABOUT TESTING

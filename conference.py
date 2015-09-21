@@ -387,12 +387,12 @@ class ConferenceApi(remote.Service):
     def _addSessionToWishlist(self, session_key):
         user_id = self._getCurrentUserID()
 
-        # Reviewer: This was never intended to use a urlsafe key
-        # Notice the request.query field.
-        # I have so far failed to get the .append method to work properly
-        # Please advise.
-        wish_list = Wishlist.query(ancestor=ndb.Key(Profile, user_id)).get()
-        wish_list.sessionKeys += {session_key}
+        key = ndb.Key(Profile, user_id).get()
+        wish_list = Wishlist.query(ancestor=key.key).get()
+        if wish_list and wish_list.sessionKeys:
+            wish_list.sessionKeys.append(session_key)
+        else:
+            wish_list.sessionKeys = [session_key]
         wish_list.put()
 
     # Looks up a model session key given a urlsafe key
@@ -735,9 +735,15 @@ class ConferenceApi(remote.Service):
         session.put()
 
         # Update featured speaker key in memcache
-        # Reviewer: Function also checks if speaker has more than 2 sessions
-        self._checkThenSetFeaturedSpeaker(
-            speaker_display_name=session.speakerDisplayName)
+
+        speaker = session.speakerDisplayName
+
+        # todo: test taskque
+        number_sessions = self._getNumberOfSessionBySpeaker(speaker)
+
+        if number_sessions > 1:
+            taskqueue.add(params={speaker: data['speakerDisplayName']},
+                          url='/tasks/set_featured_speaker')
 
         return self._copySessionToForm(session=session)
 
@@ -1160,19 +1166,17 @@ class ConferenceApi(remote.Service):
 # """ FEATURED SPEAKER """ #
 ##############################################################################
 
-    # Sets a memcache key to speaker if speaker has more than two sessions
-    def _checkThenSetFeaturedSpeaker(self, speaker_display_name):
-        number_sessions = self._getNumberOfSessionBySpeaker(
-            speaker_display_name
-        )
+    # Sets a memcache key to speaker
+    def _setFeaturedSpeaker(featured_speaker):
 
         # Set MEMCACHE key to FEATURED SPEAKER
         memcache_speaker_key = 'FEATURED SPEAKER'
 
-        if number_sessions > 1:
-            memcache_msg = "Our Featured speaker is " +\
-                           str(speaker_display_name)
-            memcache.set(memcache_speaker_key, memcache_msg)
+        # Create message
+        memcache_msg = "Our Featured speaker is " + str(featured_speaker)
+
+        # Set memcache key
+        memcache.set(memcache_speaker_key, memcache_msg)
 
     @endpoints.method(message_types.VoidMessage, StringMessage,
                       path='conference/featured_speaker/get',
