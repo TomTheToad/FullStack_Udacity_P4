@@ -202,7 +202,6 @@ class ConferenceApi(remote.Service):
 
     # Retrieves a single conference query item
     # takes variable websafeConferenceKey
-    # todo: test
     def _getConferenceByKey(self, websafeConferenceKey):
         conference = ndb.Key(urlsafe=websafeConferenceKey).get()
         return conference
@@ -592,15 +591,14 @@ class ConferenceApi(remote.Service):
     # Takes conference name or websafeConferenceKey
     # todo: undo comments when complete
     def _getConferenceSessionsByKey(self, websafeConferenceKey):
-        # try:
-        # print "WEBKEY: " + str(websafeConferenceKey)
-        conference = self._getConferenceByKey(websafeConferenceKey)
+        try:
+            conference = self._getConferenceByKey(websafeConferenceKey)
 
-        query_sessions = Session.query(ancestor=conference.key)
-        return self._copyMultipleSessionsToForm(query=query_sessions)
-        # except:
-        #     raise endpoints.NotFoundException(
-        #         'No sessions found')
+            query_sessions = Session.query(ancestor=conference.key)
+            return self._copyMultipleSessionsToForm(query=query_sessions)
+        except:
+            raise endpoints.NotFoundException(
+                'No sessions found')
 
     # Returns a session key
     # Requires name of session (session_name)
