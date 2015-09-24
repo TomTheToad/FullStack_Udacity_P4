@@ -436,7 +436,7 @@ class ConferenceApi(remote.Service):
     def addSessionToWishlist(self, request):
         """Add a Session to wishlist by session key"""
 
-        session_key = request.sessionKey
+        session_key = request.websafeSessionKey
 
         # Convert websafeConferenceKey to datastore id
         session_key = self._convertSessionWebsafeKey(
@@ -694,7 +694,7 @@ class ConferenceApi(remote.Service):
     # requires conference id, speaker id, conferenceName, and sessionType
     # speaker id = profile id
     # An attendee can also be a speaker
-    def _createSessionObject(self, request, websafeConferenceKey):
+    def _createSessionObject(self, request):
 
         # Check to see if user is logged in
         self._checkLoggedIn()
@@ -707,9 +707,6 @@ class ConferenceApi(remote.Service):
         if not request.speakerDisplayName:
             raise endpoints.BadRequestException(
                 "Conference session 'speakerDisplayName' field required")
-        if not request.conferenceName:
-            raise endpoints.BadRequestException(
-                "Conference session 'conferenceName' field required")
         if not request.sessionType:
             raise endpoints.BadRequestException(
                 "Conference session 'sessionType' field required")
@@ -722,13 +719,7 @@ class ConferenceApi(remote.Service):
                 for field in request.all_fields()}
 
         # Retrieve Conference by name or by websafeConferenceKey
-        # if present
-        if websafeConferenceKey is not None:
-            conference = self._getConferenceByKey(
-                websafeConferenceKey)
-        else:
-            conference = self._getConferenceByName(
-                conferenceName=request.conferenceName)
+        conference = self._getConferenceByKey(request.websafeConferenceKey)
 
         # clean up and translate date fields
         clean_data = self._cleanData(data=data)
@@ -745,7 +736,6 @@ class ConferenceApi(remote.Service):
         session.put()
 
         # Update featured speaker key in memcache
-
         # Get the current speaker
         speaker = session.speakerDisplayName
 
@@ -773,9 +763,7 @@ class ConferenceApi(remote.Service):
                       name='createSession')
     def createSession(self, request):
         """Create new session."""
-        return self._createSessionObject(
-            request=request,
-            websafeConferenceKey=request.websafeKey)
+        return self._createSessionObject(request=request)
 
     @endpoints.method(SESSION_GET_REQUEST, SessionForms,
                       path='conference/session/query/by_conference'

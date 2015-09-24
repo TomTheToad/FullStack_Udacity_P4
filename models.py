@@ -53,7 +53,7 @@ class Wishlist(ndb.Model):
 
 class WishlistForm(messages.Message):
     # userId = messages.StringField(1)
-    sessionKey = messages.StringField(2)
+    websafeSessionKey = messages.StringField(2)
     # websafeKey = messages.StringField(3)
 
 
@@ -75,7 +75,7 @@ class Conference(ndb.Model):
     topics          = ndb.StringProperty(repeated=True)
     city            = ndb.StringProperty()
     startDate       = ndb.DateProperty()
-    month           = ndb.IntegerProperty() # TODO: do we need for indexing like Java?
+    month           = ndb.IntegerProperty()
     endDate         = ndb.DateProperty()
     maxAttendees    = ndb.IntegerProperty()
     seatsAvailable  = ndb.IntegerProperty()
@@ -107,7 +107,6 @@ class Session(ndb.Model):
     name                = ndb.StringProperty(required=True)
     highlights          = ndb.StringProperty(repeated=True)
     speakerDisplayName  = ndb.StringProperty(required=True)
-    conferenceName      = ndb.StringProperty(required=True)
     duration            = ndb.IntegerProperty()
     sessionType         = ndb.StringProperty(default='NOT_SPECIFIED', required=True)
     date                = ndb.DateProperty()
@@ -118,12 +117,11 @@ class SessionForm(messages.Message):
     name                = messages.StringField(1)
     highlights          = messages.StringField(2, repeated=True)
     speakerDisplayName  = messages.StringField(3)
-    conferenceName      = messages.StringField(4)
-    duration            = messages.IntegerField(5)
-    sessionType         = messages.EnumField('SessionTypeEnum', 6)
-    date                = messages.StringField(7)
-    startTime           = messages.StringField(8)
-    websafeKey          = messages.StringField(10)
+    duration            = messages.IntegerField(4)
+    sessionType         = messages.EnumField('SessionTypeEnum', 5)
+    date                = messages.StringField(6)
+    startTime           = messages.StringField(7)
+    websafeKey          = messages.StringField(8)
 
 
 # Child of Session
@@ -203,7 +201,8 @@ class ConferenceQueryForm(messages.Message):
 
 
 class ConferenceQueryForms(messages.Message):
-    """ConferenceQueryForms -- multiple ConferenceQueryForm inbound form message"""
+    """ConferenceQueryForms --
+    multiple ConferenceQueryForm inbound form message"""
     filters = messages.MessageField(ConferenceQueryForm, 1, repeated=True)
 
 
@@ -216,8 +215,10 @@ class SessionQueryForm(messages.Message):
     query = messages.StringField(1)
     # websafeKey = messages.StringField(2)
 
+
 class SessionQueryKeyForm(messages.Message):
     websafeKey = messages.StringField(1)
+
 
 class SessionsQueryTypeAndTime(messages.Message):
     # conferenceName = messages.StringField(1)
