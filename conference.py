@@ -44,7 +44,14 @@ __author__ = 'wesc+api@google.com (Wesley Chun)'
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
 MEMCACHE_ANNOUNCEMENTS_KEY = "RECENT_ANNOUNCEMENTS"
-MEMCACHE_FEATURED_SPEAKER_KEY = "Check back for our upcoming featured speaker!"
+
+#######################################
+# """ SET DEFAULT SPEAKER MESSAGE """ #
+##############################################################################
+
+MEMCACHE_FEATURED_SPEAKER_KEY = "on the way. Check back soon!"
+taskqueue.add(params={'speaker': MEMCACHE_FEATURED_SPEAKER_KEY},
+              url='/tasks/set_featured_speaker')
 
 ##################
 # """ FIELDS """ #
@@ -397,7 +404,7 @@ class ConferenceApi(remote.Service):
 
     # Looks up a model session key given a urlsafe key
     # takes websafeConferenceKey
-    def _convertSessionWebsafeConferenceKey(self, websafeConferenceKey):
+    def _convertSessionWebsafeKey(self, websafeConferenceKey):
         session = ndb.Key(urlsafe=websafeConferenceKey).get()
         return session.key
 
@@ -428,9 +435,12 @@ class ConferenceApi(remote.Service):
                       name='addSessionToWishlist')
     def addSessionToWishlist(self, request):
         """Add a Session to wishlist by session key"""
-        # Convert websafeConferenceKey to model key
-        session_key = self._convertSessionWebsafeConferenceKey(
-            request.sessionKey)
+
+        session_key = request.sessionKey
+
+        # Convert websafeConferenceKey to datastore id
+        session_key = self._convertSessionWebsafeKey(
+            session_key)
 
         self._addSessionToWishlist(session_key=session_key)
         msg = "Session added to your wish list."
@@ -823,7 +833,7 @@ class ConferenceApi(remote.Service):
             sessions = Session.query()
             filter1 = sessions.filter(
                 Session.conferenceName == conference.name)
-            filter2 = filter1.filter(Session.sessionType == session_type)
+            filter2 = filter1.filter(Session.sessionType != session_type)
             filter3 = filter2.filter(Session.startTime < before_time)
             filter4 = filter3.filter(Session.startTime > after_time)
 
