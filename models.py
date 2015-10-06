@@ -222,6 +222,6 @@ class SessionQueryKeyForm(messages.Message):
 
 class SessionsQueryTypeAndTime(messages.Message):
     # conferenceName = messages.StringField(1)
-    sessionType = messages.StringField(2)
+    notThisSessionType = messages.StringField(2)
     sessionBeforeTime = messages.StringField(3)
     sessionAfterTime = messages.StringField(4)

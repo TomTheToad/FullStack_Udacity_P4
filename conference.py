@@ -800,11 +800,12 @@ class ConferenceApi(remote.Service):
     # This method assumes the user is looking for a session for a
     # particular conference
     # Takes arguments from request:
-    # websafeConferenceKey, sessionType, sessionBeforeTime, sessionAfterTime
+    # websafeConferenceKey, notThisSessionType,
+    # sessionBeforeTime, sessionAfterTime
     def _getConferenceSessionsByTypeAndTime(
             self, request):
 
-        session_type = request.sessionType
+        not_this_session_type = request.notThisSessionType
 
         before_time = datetime.strptime(
             request.sessionBeforeTime, '%H:%M').time()
@@ -813,7 +814,7 @@ class ConferenceApi(remote.Service):
 
         sessions = Session.query(
             ancestor=ndb.Key(urlsafe=request.websafeConferenceKey))\
-            .filter(Session.sessionType != session_type)
+            .filter(Session.sessionType != not_this_session_type)
 
         sessions_filtered_by_times = []
 
@@ -1174,8 +1175,7 @@ class ConferenceApi(remote.Service):
 
         # Create message
         memcache_msg = "Our Featured speaker is " + str(featured_speaker) + \
-                       ". The following sessions " \
-                       "registered to this speaker are: "
+                       ". sessions: "
 
         for session in sessions:
             memcache_msg += str(session.name) + ", "
