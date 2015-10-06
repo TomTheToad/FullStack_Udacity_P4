@@ -11,6 +11,7 @@ created by wesc on 2014 apr 21
 """
 
 from datetime import datetime
+import time
 
 import endpoints
 from protorpc import messages
@@ -661,7 +662,7 @@ class ConferenceApi(remote.Service):
     # Delete websafe key in data fields
     # Returns data field without websafekey
     def _dropWebsafeKey(self, data):
-        del data['websafeKey']
+        # del data['websafeKey']
         if data['websafeConferenceKey']:
             del data['websafeConferenceKey']
         return data
@@ -717,7 +718,7 @@ class ConferenceApi(remote.Service):
         data = {field.name: getattr(request, field.name)
                 for field in request.all_fields()}
 
-        # Retrieve Conference by name or by websafeConferenceKey
+        # Retrieve Conference by websafeConferenceKey
         conference = self._getConferenceByKey(request.websafeConferenceKey)
 
         # clean up and translate date fields
@@ -770,9 +771,10 @@ class ConferenceApi(remote.Service):
                       http_method='GET',
                       name='getConferenceSessions')
     def getConferenceSessions(self, request):
-        """Get sessions by conference name."""
-        # if request.websafeKey:
-        # print request.websafeKey
+        """Get sessions by conference web safe key."""
+        # todo: reviwer thought this was too much but what about multiples?
+        # This function retrieves the sessions and returns in form format
+        # Why add two calls instead of one?
         return self._getConferenceSessionsByKey(
             websafeConferenceKey=request.websafeConferenceKey)
 
@@ -808,31 +810,31 @@ class ConferenceApi(remote.Service):
             self, request):
 
         session_type = request.sessionType
+
         before_time = datetime.strptime(
             request.sessionBeforeTime, '%H:%M').time()
-        after_time = (datetime.strptime(
-            request.sessionAfterTime, '%H:%M').time())
+        after_time = datetime.strptime(
+            request.sessionAfterTime, '%H:%M').time()
 
-        try:
-            conference = Conference.query(
-                Conference.key == (
-                    ndb.Key(urlsafe=request.websafeConferenceKey))).get()
-            sessions = Session.query()
-            filter1 = sessions.filter(
-                Session.conferenceName == conference.name)
-            filter2 = filter1.filter(Session.sessionType != session_type)
-            filter3 = filter2.filter(Session.startTime < before_time)
-            filter4 = filter3.filter(Session.startTime > after_time)
+        sessions = Session.query(
+            ancestor=ndb.Key(urlsafe=request.websafeConferenceKey))\
+            .filter(Session.sessionType != session_type)
 
-            return self._copyMultipleSessionsToForm(query=filter4)
-        except:
-            raise endpoints.NotFoundException(
-                'No sessions found of type: {}, after {} or before {} from'
-                ' conference {}'.format(
-                    str(session_type),
-                    str(after_time),
-                    str(before_time),
-                    str(conference.name)))
+        sessions_filtered_by_times = []
+
+        # try:
+        if iter(sessions):
+            for session in sessions:
+                if before_time > session.startTime > after_time:
+                    sessions_filtered_by_times.append(session)
+                print "Iter chosen"
+        else:
+            if before_time > sessions.startTime > after_time:
+                sessions_filtered_by_times = [sessions]
+                print "Single chosen"
+
+        return self._copyMultipleSessionsToForm(sessions_filtered_by_times)
+
 
     @endpoints.method(SESSION_POST_REQUEST_TYPE_TIME, SessionForms,
                       path='conference/session/query/'
@@ -1191,8 +1193,8 @@ class ConferenceApi(remote.Service):
             msg = "Check back for our upcoming featured speaker!"
             return StringMessage(data=msg)
 
-############################
-# """ Test ONLY method """ #
+#############################
+# """ Test ONLY methods """ #
 ##############################################################################
 
     # Method is for testing purposes only

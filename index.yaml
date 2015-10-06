@@ -105,3 +105,13 @@ indexes:
   - name: conferenceName
   - name: sessionType
   - name: startTime
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: sessionType
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: startTime

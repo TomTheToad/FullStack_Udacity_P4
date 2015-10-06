@@ -121,7 +121,7 @@ class SessionForm(messages.Message):
     sessionType         = messages.EnumField('SessionTypeEnum', 5)
     date                = messages.StringField(6)
     startTime           = messages.StringField(7)
-    websafeKey          = messages.StringField(8)
+    # websafeKey          = messages.StringField(8)
 
 
 # Child of Session
