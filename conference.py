@@ -590,12 +590,10 @@ class ConferenceApi(remote.Service):
 
     # Returns all session associated with a conference
     # Takes conference name or websafeConferenceKey
-    # todo: remove ._getConferenceByKey()
     def _getConferenceSessionsByKey(self, websafeConferenceKey):
         try:
-            conference = self._getConferenceByKey(websafeConferenceKey)
-
-            query_sessions = Session.query(ancestor=conference.key)
+            query_sessions = Session.query(
+                ancestor=ndb.Key(urlsafe=websafeConferenceKey))
             return self._copyMultipleSessionsToForm(query=query_sessions)
         except:
             raise endpoints.NotFoundException(
@@ -772,9 +770,6 @@ class ConferenceApi(remote.Service):
                       name='getConferenceSessions')
     def getConferenceSessions(self, request):
         """Get sessions by conference web safe key."""
-        # todo: reviwer thought this was too much but what about multiples?
-        # This function retrieves the sessions and returns in form format
-        # Why add two calls instead of one?
         return self._getConferenceSessionsByKey(
             websafeConferenceKey=request.websafeConferenceKey)
 
