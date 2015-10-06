@@ -590,7 +590,7 @@ class ConferenceApi(remote.Service):
 
     # Returns all session associated with a conference
     # Takes conference name or websafeConferenceKey
-    # todo: undo comments when complete
+    # todo: remove ._getConferenceByKey()
     def _getConferenceSessionsByKey(self, websafeConferenceKey):
         try:
             conference = self._getConferenceByKey(websafeConferenceKey)
@@ -1173,8 +1173,17 @@ class ConferenceApi(remote.Service):
         # Set MEMCACHE key to FEATURED SPEAKER
         memcache_speaker_key = 'FEATURED SPEAKER'
 
+        # Get Session Names associated with featured speaker
+        sessions = Session.query(
+            Session.speakerDisplayName == featured_speaker)
+
         # Create message
-        memcache_msg = "Our Featured speaker is " + str(featured_speaker)
+        memcache_msg = "Our Featured speaker is " + str(featured_speaker) + \
+                       ". The following sessions " \
+                       "registered to this speaker are: "
+
+        for session in sessions:
+            memcache_msg += str(session.name) + ", "
 
         # Set memcache key
         memcache.set(memcache_speaker_key, memcache_msg)
