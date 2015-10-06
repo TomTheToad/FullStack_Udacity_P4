@@ -818,16 +818,13 @@ class ConferenceApi(remote.Service):
 
         sessions_filtered_by_times = []
 
-        # try:
         if iter(sessions):
             for session in sessions:
                 if before_time > session.startTime > after_time:
                     sessions_filtered_by_times.append(session)
-                print "Iter chosen"
         else:
             if before_time > sessions.startTime > after_time:
                 sessions_filtered_by_times = [sessions]
-                print "Single chosen"
 
         return self._copyMultipleSessionsToForm(sessions_filtered_by_times)
 

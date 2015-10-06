@@ -150,8 +150,31 @@ TASK 3 Query related problem:
 
     I, being me and slightly confused, did not see this as a 'problem' but as just another step to building the application. A design necessity as it is.
 
-    This query, which necessitates at least two inequality filters and an equality filter, dictates the need for multiple queries to apply the inequality filters. No > && < allowed here.
+    This query, which necessitates at least three inequality filters, dictates the need for multiple queries to apply the inequality filters. No > && < allowed here.
 
+    In the past I have been attempting to apply these filters by altering the returned query. This hasn't worked.
+
+    This time around:
+
+    1) Query all available sessions using the websafeConferenceKey and being not equal to the given session type. Note no get() method here.
+            sessions = Session.query(ancestor=ndb.Key(urlsafe=request.websafeConferenceKey)).filter(Session.sessionType != not_this_session_type)
+
+    2) Create an empty collection for the returned sessions.
+            sessions_filtered_by_times = []
+
+    3) Filter sessions by specified before and after times. This logic determines if the query returned is iterable or not.
+        if iter(sessions):
+            for session in sessions:
+                if before_time > session.startTime > after_time:
+                    sessions_filtered_by_times.append(session)
+        else:
+            if before_time > sessions.startTime > after_time:
+                sessions_filtered_by_times = [sessions]
+
+    4) Return the results
+        return self._copyMultipleSessionsToForm(sessions_filtered_by_times)
+
+    So here was the previous answer. I was trying to figure out a way of allowing the database to do the work.
     In this case, as an applied solution, I decided to simply apply each filter one by one.
 
     SO I figured the following would be the simplest solution:
