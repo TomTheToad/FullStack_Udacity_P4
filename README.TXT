@@ -54,23 +54,6 @@ I too use, and love, pyCharm with pep8 formatting. This file was given to us in 
 I was not sure if I was permitted to reformat the file. Given this feedback I reformatted the file as much as seemed polite with pep8online.com and pyCharm warnings.
 I have not changed the function or variable names as I don't think the original file creator would appreciate this.
 
-addSessionToWishlist:
-Task 2 showed the variable with 'SessionKey' as opposed to websafeConferenceKey in task 1. I took this to mean the requirement was for the model key.
-Given your response I have added a convert method to change a urlsafe key to a model key for use in testing this method.
-
-featured speaker criteria:
-The function _setFeaturedSpeaker does indeed check for more than 2 sessions prior to setting the memcache key.
-I understand the confusion given the function name so I renamed it to _checkThenSetFeaturedSpeaker().
-
-I finished the memcache task per instructed. I did indeed forget to fully implement this task.
-
-paths:
-I removed the testing toggle which ultimately altered the path variable for the sake of simplicity.
-I've attempted to set the paths as you suggested.
-
-resource containers:
-I have changed a number of string message uses to resource containers per instructions.
-
 
 TASK 1 Explain Design Choices:
 
@@ -85,11 +68,8 @@ I chose to use the user's display name as this seems to always be available. A s
 I figured that a speaker would be registered for a conference as well.
 
 I took some liberties with the required function arguments as the previous review suggested that these names were not set in stone.
-I prefer to contain everything within a request argument and to use the 'POST' http method due to the number of arguments for each session. The urls get very messy otherwise.
-I did go with the http get methods when it made sense. Such as fetching the current users wish list which requires no arguments.
-
-I also attempted to break down many of the longer methods, or functions, in to smaller, more purpose related methods.
-I have recently been reading "Clean Code" by Robert C Martin and I have been trying to implement some of the suggestions in this book.
+I prefer to contain everything within a request argument and to use the 'POST' http method due to the number of arguments for each session.
+(see "Code Formatting and Arrangement" section)
 
 The specific types as as follows for the class Session and ndb.Model instance:
 A string type for the name as this is a presentation name as opposed to and id.
@@ -125,7 +105,10 @@ postReview and getReview
 
 TASK 3 Query related problem:
 
-    update: After reviewing the problem and some helpful hints from my reviewer:
+    Ultimately I chose to provide two solutions to this problem. One that solely uses datastore to do the work and the other a "half and half" approach that I think previous reviewer was referring to.
+
+
+    The "Problem":
 
     The following query would necessitate the use of inequality filters. That is any of the following filters:
 
@@ -150,11 +133,8 @@ TASK 3 Query related problem:
 
     I, being me and slightly confused, did not see this as a 'problem' but as just another step to building the application. A design necessity as it is.
 
-    This query, which necessitates at least three inequality filters, dictates the need for multiple queries to apply the inequality filters. No > && < allowed here.
 
-    In the past I have been attempting to apply these filters by altering the returned query. This hasn't worked.
-
-    This time around:
+    Solution A:
 
     1) Query all available sessions using the websafeConferenceKey and being not equal to the given session type. Note no get() method here.
             sessions = Session.query(ancestor=ndb.Key(urlsafe=request.websafeConferenceKey)).filter(Session.sessionType != not_this_session_type)
@@ -174,40 +154,76 @@ TASK 3 Query related problem:
     4) Return the results
         return self._copyMultipleSessionsToForm(sessions_filtered_by_times)
 
-    So here was the previous answer. I was trying to figure out a way of allowing the database to do the work.
-    In this case, as an applied solution, I decided to simply apply each filter one by one.
+    Solution B: (my favorite and thanks to Jeff Donovan for the hint which ultimately helped me solve my issue)
 
-    SO I figured the following would be the simplest solution:
+    This solution allows datastore to do most all of the work and would, as I understand it, be far more efficient.
 
-        1) Query all available sessions:
-            sessions = Session.query()
+    1) Get the list of supplied session types from the enumeration model and convert to a dictionary.
+        enum_types = SessionTypeEnum(1).to_dict()
 
-        2) Filter by the specific conference by name with an equality filter:
-            filter1 = sessions.filter(Session.conferenceName == conference.name)
+    2) Populate a new dict of acceptable session types. This could also be accomplished by deleting the given session type from the previous dict.
+    I thought this way would make for easier reading and not throw an exception if the user entered something that wasn't contained in the enum.
 
-        3) Filter by session type (workshop, lecture, etc. ) with another equality filter.
-            filter2 = filter1.filter(Session.sessionType == session_type)
+    for item in enum_types:
+        if item != avoid_session_type:
+            acceptable_session_types.append(item)
 
-        4) Filter the query down to the sessions before a specific time with an inequality filter ( less than )
-            filter3 = filter2.filter(Session.startTime < before_time)
+    3) Filter the query by the given conference key.
+        filter1 = Session.query(ancestor=ndb.Key(urlsafe=request.websafeConferenceKey))
 
-        5) And finally filter the query down to the sessions that are scheduled after a specific time using the another inequality filter ( greater than )
-            filter4 = filter3.filter(Session.startTime > after_time)
+    4) Filter the query by approved session types.
+        filter2 = filter1.filter(Session.sessionType.IN(acceptable_session_types))
 
-        We could combine some these filters and have much less code but, the steps appear clearer this way. At least I think so.
-        As stated above though, you can not combine inequality filters. All though these results are not sorted, it is worth mentioning, that any sorting need be applied prior to other filters.
-        More specifically prior to the inequality filters. I'm guessing again that the query data is altered by applying filters and these alterations would interfere with ordering each record.
+    5) Filter the query for sessions that start prior to the given before_time
+        filter3 = filter2.filter(Session.startTime < before_time)
 
+    6) Filter the query for sessions that start after the given after_time
+        filter4 = filter3.filter(Session.startTime > after_time)
 
-    old answer:
-        I'll admit to being a little confused by this. I did not see this as a problem, other than datetime conversion for the sake of comparison. That's a bit interesting/ problematic
-        I chose to filter a session query in segments, as opposed to using AND/ OR, each layer would be easier to troubleshoot. This seemed proper albeit verbose.
+    7) Pass the query object to a forms method to return the results.
+        return self._copyMultipleSessionsToForm(query=filter4)
+
 
 
 SOME NOTES ABOUT TESTING
 
 Each feature has several requirements to function properly.
 
-For instance, creating a session requires the conference name, name of the session, speaker display name, and the session type (workshop, lecture, demonstration, party).
-This last one being an enum with limited values. I tried to include a check for all necessary arguments but I'll admit, that not all argument checking is complete.
-I'll included examples in the submission form to help.
+For instance, creating a session requires the conference websafeConferenceKey, name of the session, speaker display name, and the session type (workshop, lecture, demonstration, party).
+This last one being an enum with limited values.
+
+
+Code Formatting and Arrangement
+
+This has been a point of contention with this project so I'm taking the time to further explain my reasons behind the appearance of the project code.
+
+I've added something major to each project I've done for Udacity thus far. This could be a question I'd like to answer, something I wish to learn and apply, or something that I thought would be valuable in the future.
+
+The first project uses a challenging API that was not well documented. This gave me insight into issues and design Challenges with creating and documenting an API.
+
+The second project I decided to explore decorators and build a basic style ORM from them. The next project called for the use of sqlalchemy which mean't that we'd be abstracting the database layer soon so I gave it a shot.
+Ultimately my database helper file was ultra simplified as to avoid confusing the reviewer and moving the focus from the main project.
+
+The third project I decided I'd explore some front end problems as well as some more complex, inter-related database table calls. I also wanted to use some of my cartooning skills for the fun of it.
+
+This, the fourth project, I decided to apply some of what I have been reading and studying lately with regards to code formatting.
+It's an interesting problem. We, in the coding community, have our very own kind of prophets. Those that preach "clean code", "flat code", and coders as being similar to authors.
+
+I took notes from books such as "Clean Code" by "Uncle Bob" Robert C Martin, articles such as "Flat Code" from Code magazine by Mike Yeager, and courses such as "Clean Code: Writing for Humans" by Cory House or commentary and courses from Simon Alardice.
+
+I wondered how one might apply all these various principles to actual work. I started with Test Driven Development but, since I was kind of dinged for that in the previous project, decided not to move forward with it.
+I regret this decision now. I was fascinated by the application of mocks and would have liked to apply more of that to this project in particular. Someone like me, who finds themselves typing out stream of consciousness type code, can benefit greatly from the short, strong code TDD produces.
+I was fortunate enough to attend a meetup with Bitly's local senior developer talking about TDD. We got to speak one on one about mocks and clean code in general. I'm looking forward to applying some TDD in the near future.
+
+I tried to apply ideas such as DRY (Do not Repeat Yourself), breaking larger code into the smallest possible functions, and creating functions that did not necessarily require comments.
+
+What you see in the conference file is my attempts at applying all these principles. I'm not saying everything went to plan, or even well for that matter.
+
+I met a great deal of resistance, from one reviewer in particular, but ultimately have learned much by this approach. You can do allot in a single line of code but there remains a strong argument for breaking code apart and showing the individuals pieces.
+
+Do I string a set of function calls together (.this.that.something_else) or separate them out like paragraphs in an article? Do I explicitly show each step, and necessary call or do I produce slick, one line code for the sake of less lines?
+
+I can't really say yet. I can't really say if it ultimately makes any difference to the compiler either. I can say that I'm learning allot by peoples reactions.
+I am fortunate to have good friends who are engineers in aerospace, major ratings companies, and fortunate 100 tech companies. I've heard hours long arguments on poison code, code readability and more.
+
+I can't say I have many answers yet but the results so far have been eye opening.

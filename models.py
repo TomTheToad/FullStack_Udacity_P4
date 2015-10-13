@@ -124,6 +124,11 @@ class SessionForm(messages.Message):
     # websafeKey          = messages.StringField(8)
 
 
+class SessionForms(messages.Message):
+    """SessionForms -- multiple Conference outbound form message"""
+    items = messages.MessageField(SessionForm, 1, repeated=True)
+
+
 # Child of Session
 class Review(ndb.Model):
     conference_name     = ndb.StringProperty()
@@ -146,11 +151,6 @@ class ReviewForms(messages.Message):
 
 class ReviewQueryForm(messages.Message):
     session_name        = messages.StringField(1)
-
-
-class SessionForms(messages.Message):
-    """SessionForms -- multiple Conference outbound form message"""
-    items = messages.MessageField(SessionForm, 1, repeated=True)
 
 
 class TeeShirtSize(messages.Enum):
@@ -216,12 +216,12 @@ class SessionQueryForm(messages.Message):
     # websafeKey = messages.StringField(2)
 
 
-class SessionQueryKeyForm(messages.Message):
-    websafeKey = messages.StringField(1)
+# class SessionQueryKeyForm(messages.Message):
+#     websafeKey = messages.StringField(1)
 
 
 class SessionsQueryTypeAndTime(messages.Message):
-    # conferenceName = messages.StringField(1)
+    #websafeKey = messages.StringField(1)
     notThisSessionType = messages.StringField(2)
     sessionBeforeTime = messages.StringField(3)
     sessionAfterTime = messages.StringField(4)

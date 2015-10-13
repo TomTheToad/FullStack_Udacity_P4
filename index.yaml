@@ -114,4 +114,10 @@ indexes:
 - kind: Session
   ancestor: yes
   properties:
+  - name: sessionType
+  - name: startTime
+
+- kind: Session
+  ancestor: yes
+  properties:
   - name: startTime

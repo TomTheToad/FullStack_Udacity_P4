@@ -50,6 +50,9 @@ MEMCACHE_ANNOUNCEMENTS_KEY = "RECENT_ANNOUNCEMENTS"
 # """ SET DEFAULT SPEAKER MESSAGE """ #
 ##############################################################################
 
+# If you make changes or rerun this file it will wipe out the
+# Currently listed featured speaker. Comment this out if you wish
+# to retain previous featured speaker.
 MEMCACHE_FEATURED_SPEAKER_KEY = "on the way. Check back soon!"
 taskqueue.add(params={'speaker': MEMCACHE_FEATURED_SPEAKER_KEY},
               url='/tasks/set_featured_speaker')
@@ -551,11 +554,12 @@ class ConferenceApi(remote.Service):
 
     # Returns number of sessions by speaker
     # Takes speaker name
-    def _getNumberOfSessionBySpeaker(self, speaker):
+    def _getNumberOfConferenceSessionBySpeaker(
+            self, speaker, websafeConferenceKey):
         try:
             query_session = Session.query(
-                Session.speakerDisplayName == speaker
-            )
+                ancestor=ndb.Key(urlsafe=websafeConferenceKey))
+            query_session.filter(Session.speakerDisplayName == speaker)
             return query_session.count
         except:
             raise endpoints.NotFoundException(
@@ -738,7 +742,8 @@ class ConferenceApi(remote.Service):
         speaker = session.speakerDisplayName
 
         # Get the number of session hosted by current speaker
-        number_sessions = self._getNumberOfSessionBySpeaker(speaker)
+        number_sessions = self._getNumberOfConferenceSessionBySpeaker(
+            speaker, request.websafeConferenceKey)
 
         # If number of sessions greater than one set featured speaker
         if number_sessions > 1:
@@ -802,7 +807,7 @@ class ConferenceApi(remote.Service):
     # Takes arguments from request:
     # websafeConferenceKey, notThisSessionType,
     # sessionBeforeTime, sessionAfterTime
-    def _getConferenceSessionsByTypeAndTime(
+    def _getConferenceSessionsByTypeAndTimeA(
             self, request):
 
         not_this_session_type = request.notThisSessionType
@@ -828,15 +833,60 @@ class ConferenceApi(remote.Service):
 
         return self._copyMultipleSessionsToForm(sessions_filtered_by_times)
 
+    def _getConferenceSessionsByTypeAndTimeB(
+            self, request):
+
+        # Fields
+        avoid_session_type = request.notThisSessionType
+        before_time = datetime.strptime(
+            request.sessionBeforeTime, '%H:%M').time()
+        after_time = (datetime.strptime(
+            request.sessionAfterTime, '%H:%M').time())
+        acceptable_session_types = []
+
+        # Get current enum types and convert to dictionary
+        enum_types = SessionTypeEnum(1).to_dict()
+        # Alt idea: del key from enum_types dict using protected method
+
+        # Populate acceptable_session_type list with enum values
+        # not equal to avoided type
+        for item in enum_types:
+            if item != avoid_session_type:
+                acceptable_session_types.append(item)
+
+        # Query Sessions by web safe conference key
+        filter1 = Session.query(ancestor=ndb.Key(
+            urlsafe=request.websafeConferenceKey))
+
+        # filter by approved session types
+        filter2 = filter1.filter(
+            Session.sessionType.IN(acceptable_session_types))
+
+        # filter sessions prior to before_time
+        filter3 = filter2.filter(Session.startTime < before_time)
+
+        # filter sessions after to after_time
+        filter4 = filter3.filter(Session.startTime > after_time)
+
+        return self._copyMultipleSessionsToForm(query=filter4)
 
     @endpoints.method(SESSION_POST_REQUEST_TYPE_TIME, SessionForms,
                       path='conference/session/query/'
-                           'type_time/{websafeConferenceKey}',
+                           'type_time_A/{websafeConferenceKey}',
                       http_method='POST',
-                      name='getSessionByTypeAndTime')
-    def getConferenceSessionsByTypeAndTime(self, request):
-        """Task 3 query related problem"""
-        return self._getConferenceSessionsByTypeAndTime(request)
+                      name='getSessionByTypeAndTimeA')
+    def getConferenceSessionsByTypeAndTimeA(self, request):
+        """Task 3 solution A"""
+        return self._getConferenceSessionsByTypeAndTimeA(request)
+
+    @endpoints.method(SESSION_POST_REQUEST_TYPE_TIME, SessionForms,
+                      path='conference/session/query/'
+                           'type_time_B/{websafeConferenceKey}',
+                      http_method='POST',
+                      name='getSessionByTypeAndTimeB')
+    def getConferenceSessionsByTypeAndTimeB(self, request):
+        """Task 3 solution B"""
+        return self._getConferenceSessionsByTypeAndTimeB(request)
 
 ###########################
 # """ PROFILE METHODS """ #
