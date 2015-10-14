@@ -197,11 +197,11 @@ Code Formatting and Arrangement
 
 This has been a point of contention with this project so I'm taking the time to further explain my reasons behind the appearance of the project code.
 
-I've added something major to each project I've done for Udacity thus far. This could be a question I'd like to answer, something I wish to learn and apply, or something that I thought would be valuable in the future.
+I've added something major to each project that I have done for Udacity thus far. This could be a question I'd like to answer, something I wish to learn and apply, or something that I thought would be valuable in the future.
 
 The first project uses a challenging API that was not well documented. This gave me insight into issues and design Challenges with creating and documenting an API.
 
-The second project I decided to explore decorators and build a basic style ORM from them. The next project called for the use of sqlalchemy which mean't that we'd be abstracting the database layer soon so I gave it a shot.
+The second project I decided to explore decorators and build a basic ORM, well something like an ORM, from them. The next project called for the use of sqlalchemy which mean't that we'd be abstracting the database layer soon so I figured this was as good as time as any.
 Ultimately my database helper file was ultra simplified as to avoid confusing the reviewer and moving the focus from the main project.
 
 The third project I decided I'd explore some front end problems as well as some more complex, inter-related database table calls. I also wanted to use some of my cartooning skills for the fun of it.
@@ -212,18 +212,18 @@ It's an interesting problem. We, in the coding community, have our very own kind
 I took notes from books such as "Clean Code" by "Uncle Bob" Robert C Martin, articles such as "Flat Code" from Code magazine by Mike Yeager, and courses such as "Clean Code: Writing for Humans" by Cory House or commentary and courses from Simon Alardice.
 
 I wondered how one might apply all these various principles to actual work. I started with Test Driven Development but, since I was kind of dinged for that in the previous project, decided not to move forward with it.
-I regret this decision now. I was fascinated by the application of mocks and would have liked to apply more of that to this project in particular. Someone like me, who finds themselves typing out stream of consciousness type code, can benefit greatly from the short, strong code TDD produces.
-I was fortunate enough to attend a meetup with Bitly's local senior developer talking about TDD. We got to speak one on one about mocks and clean code in general. I'm looking forward to applying some TDD in the near future.
+I regret this decision now. I was fascinated by the application of mocks and would have liked to apply more of that to this project.
 
-I tried to apply ideas such as DRY (Do not Repeat Yourself), breaking larger code into the smallest possible functions, and creating functions that did not necessarily require comments.
+I tried to apply ideas such as DRY (Do not Repeat Yourself), breaking larger code into the smallest possible functions, creating functions that do not necessarily require comments, and creating functions with as few arguments as possible.
 
-What you see in the conference file is my attempts at applying all these principles. I'm not saying everything went to plan, or even well for that matter.
+What you see in the conference file is my attempts at applying most of these principles. I'm not saying everything went to plan, or even well for that matter.
 
-I met a great deal of resistance, from one reviewer in particular, but ultimately have learned much by this approach. You can do allot in a single line of code but there remains a strong argument for breaking code apart and showing the individuals pieces.
+I met a great deal of resistance, from one reviewer in particular, but ultimately have learned much by this approach. You can do allot in a single line of code but there remains a strong argument for breaking code apart and showing the individual pieces.
 
-Do I string a set of function calls together (.this.that.something_else) or separate them out like paragraphs in an article? Do I explicitly show each step, and necessary call or do I produce slick, one line code for the sake of less lines?
+Do I string a set of function calls together (.this.that.something_else) or separate them out like paragraphs in an article? Do I explicitly show each step and necessary function call, or do I produce slick one liner for the sake of less perceived code?
 
-I can't really say yet. I can't really say if it ultimately makes any difference to the compiler either. I can say that I'm learning allot by peoples reactions.
-I am fortunate to have good friends who are engineers in aerospace, major ratings companies, and fortunate 100 tech companies. I've heard hours long arguments on poison code, code readability and more.
+In reference to the above question I'd refer to page 8, item 4 from the book "Effective Python" by Brett Slatkin. The item is entitled ITEM 4: Write Helper Functions Instead of Complex Expressions.
 
-I can't say I have many answers yet but the results so far have been eye opening.
+We, as coders, are a group of many contradictions. We preach "clean code" and rail against "poison code" but ultimately I don't know if we, again as a group, have been able to really enact any of these principles. For my part, I'll probably fail allot but I'll keep trying anyway.
+
+I believe strongly that these concepts will become more and more important as time goes on and the global code base becomes bigger and potentially harder to maintain.

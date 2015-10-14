@@ -46,16 +46,6 @@ EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
 MEMCACHE_ANNOUNCEMENTS_KEY = "RECENT_ANNOUNCEMENTS"
 
-#######################################
-# """ SET DEFAULT SPEAKER MESSAGE """ #
-##############################################################################
-
-# If you make changes or rerun this file it will wipe out the
-# Currently listed featured speaker. Comment this out if you wish
-# to retain previous featured speaker.
-MEMCACHE_FEATURED_SPEAKER_KEY = "on the way. Check back soon!"
-taskqueue.add(params={'speaker': MEMCACHE_FEATURED_SPEAKER_KEY},
-              url='/tasks/set_featured_speaker')
 
 ##################
 # """ FIELDS """ #
@@ -747,8 +737,10 @@ class ConferenceApi(remote.Service):
 
         # If number of sessions greater than one set featured speaker
         if number_sessions > 1:
-            taskqueue.add(params={'speaker': speaker},
-                          url='/tasks/set_featured_speaker')
+            taskqueue.add(
+                params={'speaker': speaker,
+                        'websafeConferenceKey': request.websafeConferenceKey},
+                url='/tasks/set_featured_speaker')
 
         return self._copySessionToForm(session=session)
 
@@ -1211,14 +1203,15 @@ class ConferenceApi(remote.Service):
 ##############################################################################
 
     # Sets a memcache key to speaker
-    def _setFeaturedSpeaker(self, featured_speaker):
+    def _setFeaturedSpeaker(self, featured_speaker, websafeConferenceKey):
 
         # Set MEMCACHE key to FEATURED SPEAKER
         memcache_speaker_key = 'FEATURED SPEAKER'
 
         # Get Session Names associated with featured speaker
         sessions = Session.query(
-            Session.speakerDisplayName == featured_speaker)
+            ancestor=(ndb.Key(urlsafe=websafeConferenceKey)))
+        sessions.filter(Session.speakerDisplayName == featured_speaker)
 
         # Create message
         memcache_msg = "Our Featured speaker is " + str(featured_speaker) + \
